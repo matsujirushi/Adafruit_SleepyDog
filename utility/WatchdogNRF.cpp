@@ -12,11 +12,19 @@ int WatchdogNRF::enable(int maxPeriodMS) {
 
   // cannot change wdt config register once it is started
   // return previous configured timeout
+#if defined(NRFX_CONFIG_API_VER_MAJOR) && NRFX_CONFIG_API_VER_MAJOR >= 3
+  if (nrf_wdt_started_check(NRF_WDT))
+#else
   if (nrf_wdt_started(NRF_WDT))
+#endif
     return _wdto;
 
   // WDT run when CPU is sleep
+#if defined(NRFX_CONFIG_API_VER_MAJOR) && NRFX_CONFIG_API_VER_MAJOR >= 3
+  nrf_wdt_behaviour_set(NRF_WDT, NRF_WDT_BEHAVIOUR_RUN_SLEEP_MASK);
+#else
   nrf_wdt_behaviour_set(NRF_WDT, NRF_WDT_BEHAVIOUR_RUN_SLEEP);
+#endif
   nrf_wdt_reload_value_set(NRF_WDT, (maxPeriodMS * 32768) / 1000);
 
   // use channel 0
